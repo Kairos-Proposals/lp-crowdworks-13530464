@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kairos ご提案 | 会員制WEBガチャ（オリパ風）ポイ活連動エンタメサイト開発</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DotGothic16&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&family=Shippori+Mincho:wght@600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --night-deep:#0b0d1f;
+    --night:#171b3d;
+    --night-soft:#262a56;
+    --candy-red:#d1293d;
+    --candy-shine:#ff8fa3;
+    --gold:#e3b23c;
+    --gold-soft:#f4d98a;
+    --cream:#fff7e8;
+    --cream-dim:#f3e6c9;
+    --ink:#231f3b;
+    --silver:#9aa3c9;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html{scroll-behavior:smooth;}
+  body{
+    font-family:'Zen Kaku Gothic New', sans-serif;
+    background:var(--night-deep);
+    color:var(--cream);
+    line-height:1.85;
+    overflow-x:hidden;
+  }
+  h1,h2,h3,.logo{
+    font-family:'DotGothic16', sans-serif;
+    letter-spacing:0.04em;
+  }
+  a{color:inherit;text-decoration:none;}
+  img{max-width:100%;display:block;}
+  .wrap{max-width:1100px;margin:0 auto;padding:0 24px;}
+
+  /* ===== 共通：レア度バッジ ===== */
+  .rarity{
+    display:inline-block;
+    font-family:'DotGothic16',sans-serif;
+    font-size:0.72rem;
+    padding:3px 10px;
+    border-radius:999px;
+    letter-spacing:0.08em;
+    margin-right:6px;
+    box-shadow:0 2px 6px rgba(0,0,0,0.35);
+  }
+  .rarity.n{background:#6b7280;color:#fff;}
+  .rarity.r{background:linear-gradient(135deg,#3b82f6,#1d4ed8);color:#fff;}
+  .rarity.sr{background:linear-gradient(135deg,#a855f7,#6d28d9);color:#fff;}
+  .rarity.ssr{background:linear-gradient(135deg,var(--gold-soft),var(--gold));color:#3b2a06;}
+  .rarity.last{background:linear-gradient(120deg,#ff5f6d,#ffc371,#47e0a0,#5b8df7,#c56cf0);background-size:300% 300%;animation:rainbow 5s linear infinite;color:#1a1a1a;font-weight:700;}
+  @keyframes rainbow{0%{background-position:0% 50%;}100%{background-position:300% 50%;}}
+
+  /* ===== HERO ===== */
+  .hero{
+    position:relative;
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    align-items:center;
+    text-align:center;
+    padding:120px 20px 80px;
+    background:
+      radial-gradient(circle at 18% 20%, rgba(227,178,60,0.18), transparent 40%),
+      radial-gradient(circle at 82% 75%, rgba(209,41,61,0.25), transparent 45%),
+      linear-gradient(180deg, var(--night-deep) 0%, var(--night) 55%, var(--night-soft) 100%);
+    overflow:hidden;
+  }
+  .hero::before{
+    content:"";
+    position:absolute;
+    inset:0;
+    background-image:radial-gradient(rgba(255,247,232,0.06) 1.5px, transparent 1.5px);
+    background-size:26px 26px;
+    opacity:0.5;
+    pointer-events:none;
+  }
+  .lantern{
+    position:absolute;
+    border-radius:50%;
+    filter:blur(1px);
+    opacity:0.85;
+    animation:float 6s ease-in-out infinite;
+  }
+  .lantern.l1{width:90px;height:90px;top:10%;left:8%;background:radial-gradient(circle at 35% 30%, var(--gold-soft), var(--gold) 60%, #7a5a10 100%);box-shadow:0 0 40px rgba(227,178,60,0.5);animation-delay:0s;}
+  .lantern.l2{width:50px;height:50px;top:22%;right:12%;background:radial-gradient(circle at 35% 30%, var(--candy-shine), var(--candy-red) 65%, #5e0f1a 100%);box-shadow:0 0 30px rgba(209,41,61,0.5);animation-delay:1.2s;}
+  .lantern.l3{width:34px;height:34px;bottom:16%;left:16%;background:radial-gradient(circle at 35% 30%, #fff, var(--gold) 70%);box-shadow:0 0 24px rgba(227,178,60,0.4);animation-delay:2s;}
+  .lantern.l4{width:70px;height:70px;bottom:10%;right:8%;background:radial-gradient(circle at 35% 30%, var(--candy-shine), var(--candy-red) 65%, #5e0f1a 100%);box-shadow:0 0 36px rgba(209,41,61,0.45);animation-delay:0.6s;}
+  @keyframes float{
+    0%,100%{transform:translateY(0) rotate(0deg);}
+    50%{transform:translateY(-18px) rotate(4deg);}
+  }
+  .candy-apple{position:absolute;width:46px;height:46px;z-index:2;}
+  .candy-apple .stick{
+    position:absolute;left:50%;bottom:-32px;width:5px;height:36px;
+    background:linear-gradient(180deg,#b98341,#7a5422);
+    transform:translateX(-50%);
+    border-radius:3px;
+  }
+  .candy-apple .ball{
+    width:100%;height:100%;border-radius:50%;
+    background:radial-gradient(circle at 32% 28%, #ffe3e8 0%, var(--candy-shine) 18%, var(--candy-red) 55%, #7a0f1d 100%);
+    box-shadow:inset -4px -6px 10px rgba(0,0,0,0.35), 0 6px 14px rgba(0,0,0,0.4);
+  }
+  .candy-apple.ca1{top:14%;left:42%;transform:scale(1.1) rotate(-8deg);animation:float 7s ease-in-out infinite;}
+  .candy-apple.ca2{bottom:20%;right:28%;transform:scale(0.8) rotate(10deg);animation:float 5.5s ease-in-out infinite 0.8s;}
+
+  .kicker{
+    font-family:'DotGothic16',sans-serif;
+    font-size:0.85rem;
+    letter-spacing:0.3em;
+    color:var(--gold-soft);
+    margin-bottom:18px;
+    position:relative;
+    z-index:3;
+  }
+  .hero h1{
+    position:relative;z-index:3;
+    font-size:clamp(2.1rem, 5.6vw, 3.6rem);
+    color:var(--cream);
+    text-shadow:0 0 24px rgba(227,178,60,0.35);
+    margin-bottom:22px;
+  }
+  .hero h1 span{color:var(--candy-shine);}
+  .hero p.sub{
+    position:relative;z-index:3;
+    max-width:620px;
+    font-size:1.02rem;
+    color:var(--silver);
+    margin-bottom:34px;
+  }
+  .hero .badgebar{position:relative;z-index:3;margin-bottom:40px;}
+  .scroll-btn{
+    position:relative;z-index:3;
+    display:inline-block;
+    padding:14px 34px;
+    border-radius:999px;
+    background:linear-gradient(135deg,var(--gold-soft),var(--gold));
+    color:#3a2a06;
+    font-weight:700;
+    letter-spacing:0.05em;
+    box-shadow:0 10px 28px rgba(227,178,60,0.35);
+    transition:transform 0.2s ease;
+  }
+  .scroll-btn:hover{transform:translateY(-3px);}
+
+  /* ===== セクション共通 ===== */
+  section{padding:96px 0;position:relative;}
+  .section-label{
+    font-family:'DotGothic16',sans-serif;
+    font-size:0.78rem;
+    letter-spacing:0.25em;
+    color:var(--gold);
+    margin-bottom:14px;
+    display:block;
+  }
+  .section-title{
+    font-size:clamp(1.5rem,3.4vw,2.2rem);
+    margin-bottom:28px;
+    line-height:1.5;
+  }
+
+  /* ===== 理解セクション ===== */
+  .understand{
+    background:var(--cream);
+    color:var(--ink);
+  }
+  .understand .section-label{color:var(--candy-red);}
+  .understand-grid{
+    display:grid;
+    grid-template-columns:1.1fr 1fr;
+    gap:48px;
+    align-items:start;
+  }
+  .understand p{margin-bottom:16px;color:#3b3650;}
+  .ticket-card{
+    background:var(--ink);
+    color:var(--cream);
+    border-radius:18px;
+    padding:28px;
+    position:relative;
+    overflow:hidden;
+    box-shadow:0 18px 40px rgba(35,31,59,0.25);
+  }
+  .ticket-card::before{
+    content:"";
+    position:absolute;top:0;bottom:0;left:-30px;width:60px;
+    background:repeating-linear-gradient(0deg, transparent, transparent 10px, rgba(255,247,232,0.08) 10px, rgba(255,247,232,0.08) 20px);
+    transform:rotate(8deg);
+  }
+  .ticket-card h3{font-size:1.1rem;margin-bottom:14px;color:var(--gold-soft);}
+  .ticket-card ul{list-style:none;position:relative;z-index:2;}
+  .ticket-card li{
+    padding-left:22px;
+    position:relative;
+    margin-bottom:12px;
+    font-size:0.95rem;
+    color:#e7dcc4;
+  }
+  .ticket-card li::before{
+    content:"🎫";
+    position:absolute;left:0;top:0;font-size:0.9rem;
+  }
+
+  /* ===== 価値セクション：ガチャカプセルカード ===== */
+  .value{background:var(--night-deep);}
+  .value .section-label{color:var(--gold-soft);}
+  .value-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(230px,1fr));
+    gap:28px;
+    margin-top:10px;
+  }
+  .capsule{
+    border-radius:24px;
+    overflow:hidden;
+    background:var(--night-soft);
+    box-shadow:0 16px 36px rgba(0,0,0,0.4);
+    display:flex;
+    flex-direction:column;
+    transition:transform 0.25s ease;
+  }
+  .capsule:hover{transform:translateY(-6px);}
+  .capsule .cap-top{
+    height:92px;
+    position:relative;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .capsule:nth-child(1) .cap-top{background:linear-gradient(135deg,#ff8fa3,#d1293d);}
+  .capsule:nth-child(2) .cap-top{background:linear-gradient(135deg,#f4d98a,#e3b23c);}
+  .capsule:nth-child(3) .cap-top{background:linear-gradient(135deg,#a855f7,#6d28d9);}
+  .capsule:nth-child(4) .cap-top{background:linear-gradient(135deg,#3b82f6,#1d4ed8);}
+  .capsule:nth-child(5) .cap-top{background:linear-gradient(120deg,#ff5f6d,#ffc371,#5b8df7);background-size:220% 220%;animation:rainbow 6s linear infinite;}
+  .cap-top span.num{
+    font-family:'DotGothic16',sans-serif;
+    font-size:1.6rem;
+    color:rgba(255,255,255,0.9);
+    text-shadow:0 2px 6px rgba(0,0,0,0.3);
+  }
+  .cap-body{padding:22px 22px 26px;flex:1;}
+  .cap-body h3{font-size:1.08rem;color:var(--cream);margin-bottom:10px;}
+  .cap-body p{font-size:0.9rem;color:var(--silver);}
+
+  /* ===== スケジュール ===== */
+  .flow{background:var(--night);}
+  .flow .section-label{color:var(--gold-soft);}
+  .timeline{
+    position:relative;
+    margin-top:30px;
+    padding-left:34px;
+    border-left:2px dashed rgba(227,178,60,0.4);
+  }
+  .tl-item{position:relative;margin-bottom:40px;}
+  .tl-item:last-child{margin-bottom:0;}
+  .tl-item::before{
+    content:"";
+    position:absolute;left:-43px;top:2px;
+    width:18px;height:18px;border-radius:50%;
+    background:radial-gradient(circle at 30% 30%, var(--gold-soft), var(--gold));
+    box-shadow:0 0 0 5px var(--night), 0 0 14px rgba(227,178,60,0.6);
+  }
+  .tl-item .tl-step{
+    font-family:'DotGothic16',sans-serif;
+    font-size:0.78rem;
+    color:var(--candy-shine);
+    letter-spacing:0.15em;
+    margin-bottom:6px;
+  }
+  .tl-item h3{font-size:1.15rem;color:var(--cream);margin-bottom:8px;}
+  .tl-item p{color:var(--silver);font-size:0.92rem;max-width:620px;}
+  .note-box{
+    margin-top:50px;
+    background:var(--night-soft);
+    border-radius:16px;
+    padding:22px 26px;
+    font-size:0.9rem;
+    color:var(--cream-dim);
+    border:1px solid rgba(227,178,60,0.25);
+  }
+
+  /* ===== クロージング ===== */
+  .closing{
+    text-align:center;
+    background:
+      radial-gradient(circle at 30% 20%, rgba(209,41,61,0.25), transparent 50%),
+      radial-gradient(circle at 75% 80%, rgba(227,178,60,0.2), transparent 50%),
+      var(--night-deep);
+    padding:110px 20px;
+  }
+  .closing .section-label{color:var(--gold-soft);display:block;margin-bottom:16px;}
+  .closing h2{font-size:clamp(1.6rem,4vw,2.4rem);margin-bottom:18px;color:var(--cream);}
+  .closing p{max-width:560px;margin:0 auto 36px;color:var(--silver);}
+  .cta-group{display:flex;gap:16px;justify-content:center;flex-wrap:wrap;}
+  .btn-primary,.btn-ghost{
+    padding:15px 36px;
+    border-radius:999px;
+    font-weight:700;
+    letter-spacing:0.04em;
+    display:inline-block;
+  }
+  .btn-primary{
+    background:linear-gradient(135deg,var(--candy-shine),var(--candy-red));
+    color:#fff;
+    box-shadow:0 14px 30px rgba(209,41,61,0.4);
+  }
+  .btn-ghost{
+    border:1px solid rgba(255,247,232,0.4);
+    color:var(--cream);
+  }
+  footer{
+    text-align:center;
+    padding:30px 20px;
+    font-size:0.78rem;
+    color:var(--silver);
+    background:var(--night-deep);
+    border-top:1px solid rgba(255,247,232,0.08);
+  }
+
+  @media (max-width:860px){
+    .understand-grid{grid-template-columns:1fr;}
+  }
+  @media (max-width:600px){
+    section{padding:70px 0;}
+    .hero{padding-top:100px;}
+    .timeline{padding-left:26px;}
+    .tl-item::before{left:-35px;}
+  }
+</style>
+</head>
+<body>
+
+  <section class="hero">
+    <div class="lantern l1"></div>
+    <div class="lantern l2"></div>
+    <div class="lantern l3"></div>
+    <div class="lantern l4"></div>
+    <div class="candy-apple ca1"><div class="ball"></div><div class="stick"></div></div>
+    <div class="candy-apple ca2"><div class="ball"></div><div class="stick"></div></div>
+
+    <span class="kicker">KAIROS PROPOSAL — WEB制作・システム開発</span>
+    <h1>引く手が、止まらない<br><span>夜市</span>を、画面の中に。</h1>
+    <p class="sub">
+      会員制WEBガチャ（オリパ風）× ポイ活連動エンタメサイト。<br>
+      「りんご飴500」様の構想を、MVPとして形にするご提案です。
+    </p>
+    <div class="badgebar">
+      <span class="rarity n">N</span><span class="rarity r">R</span><span class="rarity sr">SR</span><span class="rarity ssr">SSR</span><span class="rarity last">LAST ONE</span>
+    </div>
+    <a href="#understand" class="scroll-btn">ご提案内容を見る ↓</a>
+  </section>
+
+  <section class="understand" id="understand">
+    <div class="wrap">
+      <span class="section-label">01 / 理解</span>
+      <h2 class="section-title">これは、屋台のクジ引きを<br class="pc-only">デジタルに移植するプロジェクトだと捉えています。</h2>
+      <div class="understand-grid">
+        <div>
+          <p>
+            チケットを消費して1回・10回・100回を引く――これは単なる抽選機能ではなく、
+            「次は何が出るか」というワクワクを演出の積み重ねで作るエンタメ体験だと理解しています。
+          </p>
+          <p>
+            広告視聴やアンケート回答でチケットが貯まる導線は、ユーザーの継続的な接触と
+            運営側の収益化を同時に満たす、いわゆる「ポイ活×ガチャ」のハイブリッド設計。
+            ここの導線設計がサービスの滞在時間を左右する要所だと考えています。
+          </p>
+          <p>
+            さらに景品交換フォームやラストワン賞のカウント管理は、ユーザーの安心感と
+            「あと1個で当たる」という射幸心の両方を支える裏側の仕組みです。
+            見た目の派手さよりも、ここの在庫・状態管理の正確さが信頼を作ります。
+          </p>
+          <p>
+            詳細仕様は個別チャットでの開示とのこと、承知しております。まずは本ページで
+            全体の進め方と価値提供のイメージをご確認いただき、そこから具体の仕様すり合わせに
+            進めればと考えています。
+          </p>
+        </div>
+        <div class="ticket-card">
+          <h3>把握している主な要件</h3>
+          <ul>
+            <li>会員ログイン制のWEBガチャ（1回・10回・100回引き）</li>
+            <li>アプリ広告視聴／アンケート回答によるチケット付与</li>
+            <li>特定条件達成によるチケット付与ロジック</li>
+            <li>簡易な景品交換申請フォーム</li>
+            <li>ラストワン賞のカウント・在庫管理システム</li>
+            <li>予算40〜50万円／内容に応じて柔軟に相談可とのこと</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="value">
+    <div class="wrap">
+      <span class="section-label">02 / Kairosが提供できる価値</span>
+      <h2 class="section-title">限られた予算の中で、<br class="pc-only">「核となる体験」から確実に作ります。</h2>
+      <div class="value-grid">
+        <div class="capsule">
+          <div class="cap-top"><span class="num">01</span></div>
+          <div class="cap-body">
+            <h3>ガチャ演出・確率設計</h3>
+            <p>1/10/100連の排出ロジックと、レア度に応じた演出パターンを設計。「引く楽しさ」を数字と画面表現の両方から作り込みます。</p>
+          </div>
+        </div>
+        <div class="capsule">
+          <div class="cap-top"><span class="num">02</span></div>
+          <div class="cap-body">
+            <h3>ポイ活導線の実装</h3>
+            <p>広告視聴・アンケート回答・条件達成など、複数経路からのチケット付与ロジックを一元管理できる仕組みを構築します。</p>
+          </div>
+        </div>
+        <div class="capsule">
+          <div class="cap-top"><span class="num">03</span></div>
+          <div class="cap-body">
+            <h3>景品交換・在庫管理</h3>
+            <p>景品交換フォームとラストワン賞のカウントを連動させ、在庫切れ・不正交換のリスクを抑えた運用基盤を用意します。</p>
+          </div>
+        </div>
+        <div class="capsule">
+          <div class="cap-top"><span class="num">04</span></div>
+          <div class="cap-body">
+            <h3>スピード重視のMVP開発</h3>
+            <p>ご予算内で「まず動く・まず試せる」状態を最優先に設計。機能の優先順位づけから一緒に整理します。</p>
+          </div>
+        </div>
+        <div class="capsule">
+          <div class="cap-top"><span class="num">05</span></div>
+          <div class="cap-body">
+            <h3>伸びしろを残す設計</h3>
+            <p>将来的な機能追加・会員拡大・運用引き継ぎを見据え、無理のないコード構成とドキュメント化を行います。</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="flow">
+    <div class="wrap">
+      <span class="section-label">03 / 進め方・スケジュールイメージ</span>
+      <h2 class="section-title">仕様書の開示から、公開まで。<br class="pc-only">想定ステップはこちらです。</h2>
+      <div class="timeline">
+        <div class="tl-item">
+          <div class="tl-step">STEP 01</div>
+          <h3>要件すり合わせ（仕様書共有）</h3>
+          <p>個別チャットで開示いただく仕様書をもとに、必須機能・優先度・予算配分を一緒に整理します。</p>
+        </div>
+        <div class="tl-item">
+          <div class="tl-step">STEP 02</div>
+          <h3>画面設計・UI/UX設計</h3>
+          <p>ガチャ演出、チケット残高表示、景品交換フォームなど主要画面のワイヤー〜デザインを作成します。</p>
+        </div>
+        <div class="tl-item">
+          <div class="tl-step">STEP 03</div>
+          <h3>MVP開発</h3>
+          <p>会員認証・ガチャロジック・チケット付与・景品交換・ラストワン賞カウントの核機能を実装します。</p>
+        </div>
+        <div class="tl-item">
+          <div class="tl-step">STEP 04</div>
+          <h3>テスト・納品・運用サポート</h3>
+          <p>排出確率や在庫カウントの検証を行い、公開後の軽微な調整・運用相談にも対応します。</p>
+        </div>
+      </div>
+      <div class="note-box">
+        ※ 期間・費用はご予算（40〜50万円）に収まる機能範囲でご提案しますが、
+        搭載機能の優先順位によって柔軟に調整可能です。まずは仕様の全体像を拝見のうえ、
+        お見積りの精度を上げさせてください。
+      </div>
+    </div>
+  </section>
+
+  <section class="closing">
+    <span class="section-label">04 / Next Action</span>
+    <h2>その一振りを、<br>一緒に形にしませんか。</h2>
+    <p>
+      まずは仕様書の詳細を拝見し、実現可能な範囲とスケジュール感をすり合わせたいです。
+      個別チャットでのやり取り、歓迎いたします。
+    </p>
+    <div class="cta-group">
+      <a href="#" class="btn-primary">Kairosに相談する</a>
+      <a href="#understand" class="btn-ghost">提案内容をもう一度見る</a>
+    </div>
+  </section>
+
+  <footer>
+    Kairos — Web制作・システム開発チーム ｜ 本ページは「りんご飴500」様の募集内容に基づくご提案資料です。
+  </footer>
+
+</body>
+</html>
